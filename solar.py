@@ -1,72 +1,115 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-from sklearn.ensemble import RandomForestRegressor
 
-# Page config
-st.set_page_config(page_title="Solar Dashboard", layout="wide")
+st.set_page_config(layout="wide")
 
-# Header
-st.title("☀ Solar Energy Monitoring Dashboard")
-st.markdown("Real-time solar performance insights & predictions")
+# ---------- CUSTOM CSS ----------
+st.markdown("""
+<style>
+body {
+    background-color: #f5f7fb;
+}
 
-# Sidebar
-st.sidebar.header("⚙ Controls")
-file = st.sidebar.file_uploader("Upload CSV Data")
+.main-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: #0b1f3a;
+}
 
-if file:
-    df = pd.read_csv(file)
+.blue-text {
+    color: #2E6CF6;
+}
 
-    # Metrics (top cards)
-    col1, col2, col3 = st.columns(3)
+.desc {
+    color: #5f6b7a;
+    font-size: 16px;
+    line-height: 1.6;
+}
 
-    if "AC_POWER" in df.columns:
-        col1.metric("⚡ Avg Power", f"{df['AC_POWER'].mean():.2f} kW")
-        col2.metric("🔋 Max Power", f"{df['AC_POWER'].max():.2f} kW")
-        col3.metric("📉 Min Power", f"{df['AC_POWER'].min():.2f} kW")
+.metric-card {
+    background-color: #f9fafc;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0px 8px 25px rgba(0,0,0,0.08);
+}
 
-    st.divider()
+.small-title {
+    font-size: 12px;
+    color: #8a94a6;
+    text-transform: uppercase;
+}
 
-    # Charts row 1
-    c1, c2 = st.columns(2)
+.metric {
+    font-size: 26px;
+    font-weight: 700;
+}
 
-    if "AC_POWER" in df.columns:
-        fig1 = px.line(df, y="AC_POWER", title="⚡ AC Power Trend")
-        c1.plotly_chart(fig1, use_container_width=True)
+.green {
+    color: green;
+}
 
-    if "AMBIENT_TEMPERATURE" in df.columns:
-        fig2 = px.line(df, y="AMBIENT_TEMPERATURE", title="🌡 Temperature Trend")
-        c2.plotly_chart(fig2, use_container_width=True)
+.btn {
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
 
-    # Charts row 2
-    c3, c4 = st.columns(2)
+# ---------- HEADER ----------
+col1, col2 = st.columns([6,2])
 
-    if "IRRADIATION" in df.columns and "AC_POWER" in df.columns:
-        fig3 = px.scatter(df, x="IRRADIATION", y="AC_POWER",
-                          title="☀ Irradiation vs Power")
-        c3.plotly_chart(fig3, use_container_width=True)
+with col1:
+    st.markdown("## ☀️ SPICE Solar Energy Dashboard")
+    st.caption("DEVELOPED USING SPICE DATA")
 
-    if "MODULE_TEMPERATURE" in df.columns:
-        fig4 = px.histogram(df, x="MODULE_TEMPERATURE",
-                            title="🔥 Module Temperature Distribution")
-        c4.plotly_chart(fig4, use_container_width=True)
+with col2:
+    st.button("Overview & Pipeline")
+    st.button("Dashboard")
 
-    st.divider()
+# ---------- MAIN SECTION ----------
+left, right = st.columns([2,1])
 
-    # ML Prediction Section
-    st.subheader("🤖 Power Prediction (AI Model)")
+with left:
+    st.markdown('<div class="small-title">PROJECT OVERVIEW</div>', unsafe_allow_html=True)
 
-    if st.button("Train & Predict"):
-        X = df.select_dtypes(include='number').drop(columns=["AC_POWER"], errors='ignore')
-        y = df["AC_POWER"]
+    st.markdown('<div class="main-title">Solar Production Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title blue-text">and Prediction</div>', unsafe_allow_html=True)
 
-        model = RandomForestRegressor()
-        model.fit(X, y)
+    st.markdown("""
+    <div class="desc">
+    This project analyzes solar energy production using multiple datasets.
+    Visser and Bissell production data were provided by SPICE.
+    Additional datasets including weather data, NASA solar radiation data,
+    and electricity pool price data were used.
+    </div>
+    """, unsafe_allow_html=True)
 
-        preds = model.predict(X[:10])
+    colA, colB = st.columns(2)
 
-        st.success("Model Trained Successfully ✅")
-        st.write("🔮 Sample Predictions:", preds)
+    with colA:
+        st.markdown('<div class="btn">• Understand environmental impact on solar production</div>', unsafe_allow_html=True)
+        st.markdown('<div class="btn">• Estimate revenue</div>', unsafe_allow_html=True)
 
-else:
-    st.info("👈 Upload your solar dataset to start dashboard")
+    with colB:
+        st.markdown('<div class="btn">• Compare solar sites</div>', unsafe_allow_html=True)
+        st.markdown('<div class="btn">• Build a machine learning model</div>', unsafe_allow_html=True)
+
+# ---------- RIGHT CARD ----------
+with right:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="small-title">PEAK MONTH</div>
+        <div class="metric">May</div><br>
+
+        <div class="small-title">MAIN DRIVER</div>
+        <div class="metric blue-text">Radiation</div><br>
+
+        <div class="small-title">REVENUE PEAK</div>
+        <div class="metric green">Summer</div><br>
+
+        <div class="small-title">MODEL R²</div>
+        <div class="metric">0.67</div>
+    </div>
+    """, unsafe_allow_html=True)
