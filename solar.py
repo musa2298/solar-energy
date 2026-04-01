@@ -1,115 +1,67 @@
+# dashboard.py
 import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Spice Solar Energy Dashboard", layout="wide")
 
-# ---------- CUSTOM CSS ----------
+# --- Sidebar ---
+st.sidebar.title("Filters")
+region = st.sidebar.selectbox("Select Region", ["All", "North", "South", "East", "West"])
+year = st.sidebar.slider("Select Year", 2018, 2026, 2023)
+
+# --- Dummy Data ---
+np.random.seed(42)
+data = pd.DataFrame({
+    "Month": pd.date_range(start=f"{year}-01-01", periods=12, freq="M"),
+    "Energy Produced (kWh)": np.random.randint(2000, 5000, 12),
+    "Energy Consumed (kWh)": np.random.randint(1500, 4500, 12),
+    "Revenue ($)": np.random.randint(1000, 5000, 12),
+    "Region": np.random.choice(["North", "South", "East", "West"], 12)
+})
+
+# Apply region filter
+if region != "All":
+    data = data[data["Region"] == region]
+
+# --- KPIs ---
+total_energy = data["Energy Produced (kWh)"].sum()
+total_revenue = data["Revenue ($)"].sum()
+avg_energy = data["Energy Produced (kWh)"].mean()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Energy Produced", f"{total_energy:,} kWh")
+col2.metric("Average Energy Produced", f"{avg_energy:.2f} kWh")
+col3.metric("Total Revenue", f"${total_revenue:,}")
+
+# --- Line Chart ---
+fig_energy = px.line(
+    data,
+    x="Month",
+    y=["Energy Produced (kWh)", "Energy Consumed (kWh)"],
+    title="Monthly Energy Produced vs Consumed",
+    markers=True
+)
+st.plotly_chart(fig_energy, use_container_width=True)
+
+# --- Bar Chart ---
+fig_revenue = px.bar(
+    data,
+    x="Month",
+    y="Revenue ($)",
+    title="Monthly Revenue",
+    color="Revenue ($)",
+    color_continuous_scale="Viridis"
+)
+st.plotly_chart(fig_revenue, use_container_width=True)
+
+# --- Data Table ---
+st.subheader("Detailed Data")
+st.dataframe(data)
+
+# --- Footer ---
 st.markdown("""
-<style>
-body {
-    background-color: #f5f7fb;
-}
-
-.main-title {
-    font-size: 48px;
-    font-weight: 700;
-    color: #0b1f3a;
-}
-
-.blue-text {
-    color: #2E6CF6;
-}
-
-.desc {
-    color: #5f6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.metric-card {
-    background-color: #f9fafc;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0px 8px 25px rgba(0,0,0,0.08);
-}
-
-.small-title {
-    font-size: 12px;
-    color: #8a94a6;
-    text-transform: uppercase;
-}
-
-.metric {
-    font-size: 26px;
-    font-weight: 700;
-}
-
-.green {
-    color: green;
-}
-
-.btn {
-    padding: 15px;
-    border-radius: 10px;
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ---------- HEADER ----------
-col1, col2 = st.columns([6,2])
-
-with col1:
-    st.markdown("## ☀️ SPICE Solar Energy Dashboard")
-    st.caption("DEVELOPED USING SPICE DATA")
-
-with col2:
-    st.button("Overview & Pipeline")
-    st.button("Dashboard")
-
-# ---------- MAIN SECTION ----------
-left, right = st.columns([2,1])
-
-with left:
-    st.markdown('<div class="small-title">PROJECT OVERVIEW</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="main-title">Solar Production Analysis</div>', unsafe_allow_html=True)
-    st.markdown('<div class="main-title blue-text">and Prediction</div>', unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="desc">
-    This project analyzes solar energy production using multiple datasets.
-    Visser and Bissell production data were provided by SPICE.
-    Additional datasets including weather data, NASA solar radiation data,
-    and electricity pool price data were used.
-    </div>
-    """, unsafe_allow_html=True)
-
-    colA, colB = st.columns(2)
-
-    with colA:
-        st.markdown('<div class="btn">• Understand environmental impact on solar production</div>', unsafe_allow_html=True)
-        st.markdown('<div class="btn">• Estimate revenue</div>', unsafe_allow_html=True)
-
-    with colB:
-        st.markdown('<div class="btn">• Compare solar sites</div>', unsafe_allow_html=True)
-        st.markdown('<div class="btn">• Build a machine learning model</div>', unsafe_allow_html=True)
-
-# ---------- RIGHT CARD ----------
-with right:
-    st.markdown("""
-    <div class="metric-card">
-        <div class="small-title">PEAK MONTH</div>
-        <div class="metric">May</div><br>
-
-        <div class="small-title">MAIN DRIVER</div>
-        <div class="metric blue-text">Radiation</div><br>
-
-        <div class="small-title">REVENUE PEAK</div>
-        <div class="metric green">Summer</div><br>
-
-        <div class="small-title">MODEL R²</div>
-        <div class="metric">0.67</div>
-    </div>
-    """, unsafe_allow_html=True)
+---
+Dashboard created with **Streamlit** | Demo Version
+""")
